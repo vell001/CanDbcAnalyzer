@@ -32,7 +32,7 @@ div {
 
 .dbc-info {
     flex: 1 1;
-    flex-direction: column;
+    flex-direction: row;
 }
 
 .dbc-edit {
@@ -46,7 +46,10 @@ div {
     margin: 2% 0;
     width: 100%;
 }
-
+#signal-plot {
+    flex: 1 1;
+    flex-direction: column;
+}
 ._1udfl3 {
     margin: 0px !important;
     padding: 12px !important;

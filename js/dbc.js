@@ -12,6 +12,8 @@ function dbcAnalyzer(data) {
     if (curCanId && curCanId === id) {
         updateCanBitData(can_info[id]);
     }
+
+    updatePlotView(id);
 }
 
 function updateCanInfo(stdId, data) {
@@ -155,19 +157,24 @@ function updateCanBitData(data) {
     }
 }
 
-function dbcCalSignalValue(stdId, data) {
+function dbcCalSignalValue(stdId, sigIdx, sig, data) {
+    if (!sig) {
+        return;
+    }
+    let v = Utils_ByteSub(data, sig["startBit"], sig["bitLen"], sig["byteOrder"]);
+    if (sig["isSigned"] === 1) {
+        v = v << 0;
+    }
+    dbc_protocol[stdId]["signals"][sigIdx]["value"] = v * sig["factor"] + sig["offset"];
+    console.log(sig["name"], v, dbc_protocol[stdId]["signals"][sigIdx]["value"]);
+}
+
+function dbcCalMsgSignalValue(stdId, data) {
     if (!data) {
         return;
     }
     dbc_protocol[stdId]["signals"].forEach((sig, index) => {
-        if (sig) {
-            let v = Utils_ByteSub(data, sig["startBit"], sig["bitLen"], sig["byteOrder"]);
-            if (sig["isSigned"] === 1) {
-                v = v << 0;
-            }
-            dbc_protocol[stdId]["signals"][index]["value"] = v * sig["factor"] + sig["offset"];
-            console.log(sig["name"], v, dbc_protocol[stdId]["signals"][index]["value"]);
-        }
+        dbcCalSignalValue(stdId, index, sig, data)
     });
 }
 
@@ -239,13 +246,71 @@ function dbcBitsOnClick(obj) {
     }
 }
 
-function deleteSignal(canId, signalName) {
-    dbc_protocol[canId]["signals"][signalName] = undefined;
+function deleteSignal(canId, signalIdx) {
+    dbc_protocol[canId]["signals"][signalIdx] = undefined;
     updateDbcSignalView(true);
 }
 
-function plotSignal(canId, signalName) {
+let plotCharts = [];
+let plotChartSignal = [];
 
+function addPlotChart() {
+    let chartIdx = plotCharts.length;
+    let tmp = document.createElement("div");
+    tmp.id = "signal-plot_" + chartIdx;
+    tmp.innerHTML = String.format("<div><button onclick='removePlotSignal({0})'>unplot</button></div>" +
+        "<canvas id=\"signal-plot-chart_{0}\"></canvas>", chartIdx);
+    document.getElementById("signal-plot").insertBefore(tmp, document.getElementById("signal-plot").firstChild);
+    let ctx = document.getElementById("signal-plot-chart_" + chartIdx).getContext("2d");
+    let myNewChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: "",
+                fillColor: "rgba(220,220,220,0.5)",
+                strokeColor: "rgba(220,220,220,1)",
+                pointColor: "rgba(220,220,220,1)",
+                pointStrokeColor: "#fff",
+                data: []
+            }]
+        }
+    });
+    plotCharts.push(myNewChart);
+}
+
+function updatePlotView(canId) {
+    plotChartSignal.forEach((s, idx) => {
+        if (s && canId === s.canId) {
+            dbc_protocol[canId]["signals"].forEach((sig, index) => {
+                if (index === s.signalIdx) {
+                    dbcCalSignalValue(canId, index, sig, can_info[canId]);
+                    if (plotCharts[idx].config.data.labels.length > 100) {
+                        plotCharts[idx].config.data.labels = plotCharts[idx].config.data.labels.slice(10, 100);
+                        plotCharts[idx].config.data.datasets[0].data = plotCharts[idx].config.data.datasets[0].data.slice(10, 100);
+                    }
+                    plotCharts[idx].config.data.labels.push(can_info[canId]["count"]);
+                    plotCharts[idx].config.data.datasets[0].data.push(dbc_protocol[canId]["signals"][index]["value"]);
+                    plotCharts[idx].config.data.datasets[0].label = dbc_protocol[canId]["signals"][index]["name"];
+                    plotCharts[idx].update();
+                }
+            });
+        }
+    });
+}
+
+function plotSignal(canId, signalIdx) {
+    addPlotChart();
+    plotChartSignal.push({
+        canId: canId,
+        signalIdx: signalIdx,
+    });
+}
+
+function removePlotSignal(chartIdx) {
+    plotChartSignal[chartIdx] = undefined;
+    let d = document.getElementById("signal-plot_" + chartIdx);
+    d.parentNode.removeChild(d);
 }
 
 function signalNameOnClick(signalName) {
@@ -274,7 +339,7 @@ function updateDbcSignalView(clear) {
     if (clear) {
         document.getElementById("signals-list").innerHTML = "";
     }
-    dbcCalSignalValue(curCanId, can_info[curCanId]["bytes"]);
+    dbcCalMsgSignalValue(curCanId, can_info[curCanId]["bytes"]);
     clearBitsView();
     dbc_p["signals"].forEach((sig, index) => {
         if (sig) {
