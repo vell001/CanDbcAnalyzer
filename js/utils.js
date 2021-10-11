@@ -70,6 +70,27 @@ function Utils_ByteMask(start, end) {
     return (((0xFF << start) & (~(0xFF << (end + 1))))) & 0xFF;
 }
 
+function Utils_ByteSub2(bytes, startBit,bitLen,order) {
+    let count = 1;
+    let endBit = startBit;
+    let value = 0;
+    if (order === 0) {
+        // 大端在前
+        while (count <= bitLen) {
+            count++;
+            endBit--;
+            if (endBit % 8 === 7) {
+                endBit += 16;
+            }
+        }
+    } else {
+        while (count <= bitLen) {
+            if (endBit%8)
+            count++;
+            endBit++;
+        }
+    }
+}
 /**
  * 字节裁剪
  * @param bytes
@@ -94,9 +115,10 @@ function Utils_ByteSub(bytes, startBit, len, order) {
             ret = ret >> lsbBit;
         } else {
             lsbBit = startBit % 8;
-            msbBit = lsbBit - len + 1;
-            ret = (bytes[startByte] & Utils_ByteMask(msbBit, lsbBit));
-            ret = ret >> msbBit;
+            msbBit = lsbBit + len - 1;
+            let mask = Utils_ByteMask(lsbBit, msbBit);
+            ret = (bytes[startByte] & mask);
+            ret = ret >> lsbBit;
         }
     } else {
         if (order === 0) { // 大端在前

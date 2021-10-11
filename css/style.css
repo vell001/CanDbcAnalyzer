@@ -3,8 +3,12 @@ body {
     display: flex;
     flex: 0.5 1;
     flex-direction: row;
+    min-width: 1340px;
+    overflow-x: hidden;
+    height: 100%;
+    width: 100%;
+    font-family: sans-serif;
 }
-
 div {
     display: block;
 }
@@ -13,6 +17,7 @@ div {
     background: #ededed;
     display: flex;
     flex-direction: column;
+    max-height: 97vh;
 }
 
 .can-info-header {
@@ -29,10 +34,18 @@ div {
     flex-direction: column;
     padding-left: 11px;
 }
-
+#signals-list{
+    height: 100%;
+    overflow-x: hidden;
+    flex-direction: column;
+    overflow-y: scroll;
+    display: flex;
+    max-height: 48vh;
+}
 .dbc-info {
     flex: 1 1;
-    flex-direction: row;
+    flex-direction: column;
+    max-height: 97vh;
 }
 
 .dbc-edit {
@@ -46,10 +59,19 @@ div {
     margin: 2% 0;
     width: 100%;
 }
+
 #signal-plot {
     flex: 1 1;
     flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    max-height: 97vh;
 }
+
+.input-number {
+    width: 50px;
+}
+
 ._1udfl3 {
     margin: 0px !important;
     padding: 12px !important;
@@ -103,6 +125,7 @@ div {
     color: rgb(106, 48, 233) !important;
     background-color: rgba(106, 48, 233, 0.2) !important;
 }
+
 ._a2n86qNaN {
     margin: 0px !important;
     padding: 12px !important;
@@ -150,5 +173,5 @@ div {
 }
 
 .signal-entry:hover {
-    background: rgb(200,200,200);
+    background: rgb(200, 200, 200);
 }

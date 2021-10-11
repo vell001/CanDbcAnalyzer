@@ -8,6 +8,7 @@
     <script type="application/javascript" src="js/utils.js"></script>
     <script type="application/javascript" src="js/chart.min.js"></script>
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
 </head>
 <body>
 <div class="can-info">
@@ -44,7 +45,8 @@
     <div class="dbc-edit">
         <div id="dbc-edit-msg-info">
         Name: <input id="input-msg-name" value="" onchange="dbcEditOnChange(this)"/> Size:
-        <input id="input-msg-size" value="" onchange="dbcEditOnChange(this)"/>
+        <input id="input-msg-size" value="" onchange="dbcEditOnChange(this)" class="input-number"/>
+            <button id="button-msg-delete" onclick="deleteCurMsg()">Delete</button>
         </div>
         <table cellspacing="0" id="dbc_data_bits">
             <tbody id="tbody-dbc-bits">

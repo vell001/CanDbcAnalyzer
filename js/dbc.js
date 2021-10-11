@@ -19,7 +19,6 @@ function dbcAnalyzer(data) {
 function updateCanInfo(stdId, data) {
     if (!(stdId in can_info)) {
         can_info[stdId] = {
-            "name": "",
             "count": 0,
             "bytes": undefined
         }
@@ -47,8 +46,9 @@ function updateCanInfo(stdId, data) {
 
 function updateCanNameView(stdId) {
     if (stdId in dbc_protocol) {
-        can_info[stdId]["name"] = dbc_protocol[stdId]["name"];
-        document.getElementById("can_name_" + stdId).innerText = can_info[stdId]["name"];
+        document.getElementById("can_name_" + stdId).innerText = dbc_protocol[stdId]["name"];
+    } else {
+        document.getElementById("can_name_" + stdId).innerText = "";
     }
 }
 
@@ -70,6 +70,9 @@ function canDataOnClick(obj) {
     if (curCanId in dbc_protocol) {
         document.getElementById("input-msg-name").value = dbc_protocol[curCanId]["name"];
         document.getElementById("input-msg-size").value = dbc_protocol[curCanId]["byteNum"];
+    } else {
+        document.getElementById("input-msg-name").value = "untiled";
+        document.getElementById("input-msg-size").value = "8";
     }
 
     updateDbcSignalView(true);
@@ -219,7 +222,17 @@ window.onload = function () {
 let bitClickStart = -1;
 
 function dbcBitsOnClick(obj) {
+    if (curCanId === undefined) {
+        return;
+    }
     let bitIdx = getIdxById(obj);
+    if(!(curCanId in dbc_protocol)) {
+        dbc_protocol[curCanId] = {
+            "name": document.getElementById("input-msg-name").value,
+            "byteNum": Number(document.getElementById("input-msg-size").value),
+            "signals": []
+        }
+    }
     if (bitClickStart >= 0) {
         let dbc_p = dbc_protocol[curCanId];
         let signal = {
@@ -238,7 +251,7 @@ function dbcBitsOnClick(obj) {
             signal["bitLen"] = bitClickStart - bitIdx + 1;
             signal["byteOrder"] = 1;
         }
-        dbc_p["signals"].push(signal);
+        dbc_protocol[curCanId]["signals"].push(signal);
         updateDbcSignalView(false);
         bitClickStart = -1;
     } else {
@@ -251,6 +264,14 @@ function deleteSignal(canId, signalIdx) {
     updateDbcSignalView(true);
 }
 
+function deleteCurMsg() {
+    if (curCanId && curCanId in dbc_protocol) {
+        delete dbc_protocol[curCanId];
+        updateCanNameView(curCanId);
+        updateDbcSignalView(true);
+    }
+}
+
 let plotCharts = [];
 let plotChartSignal = [];
 
@@ -259,8 +280,10 @@ function addPlotChart() {
     let tmp = document.createElement("div");
     tmp.id = "signal-plot_" + chartIdx;
     tmp.innerHTML = String.format("<div><button onclick='removePlotSignal({0})'>unplot</button> " +
-        "UpdateTime: <label id='signal-plot-time_{0}'></label> " +
-        "Value: <label id='signal-plot-value_{0}'></label></div>" +
+        "Time: <label id='signal-plot-time_{0}'></label> " +
+        "PlotCount: <input id='signal-plot-count_{0}' type='number' value='100' class='input-number'/>" +
+        "Value: <label id='signal-plot-value_{0}'></label>" +
+        "</div>" +
         "<canvas id=\"signal-plot-chart_{0}\"></canvas>", chartIdx);
     document.getElementById("signal-plot").insertBefore(tmp, document.getElementById("signal-plot").firstChild);
     let ctx = document.getElementById("signal-plot-chart_" + chartIdx).getContext("2d");
@@ -270,6 +293,7 @@ function addPlotChart() {
             labels: [],
             datasets: [{
                 label: "",
+                bezierCurve: false,
                 fillColor: "rgba(220,220,220,0.5)",
                 strokeColor: "rgba(220,220,220,1)",
                 pointColor: "rgba(220,220,220,1)",
@@ -287,16 +311,18 @@ function updatePlotView(canId) {
             dbc_protocol[canId]["signals"].forEach((sig, index) => {
                 if (index === s.signalIdx) {
                     dbcCalSignalValue(canId, index, sig, can_info[canId]["bytes"]);
-                    if (plotCharts[idx].config.data.labels.length > 100) {
-                        plotCharts[idx].config.data.labels = plotCharts[idx].config.data.labels.slice(10, 100);
-                        plotCharts[idx].config.data.datasets[0].data = plotCharts[idx].config.data.datasets[0].data.slice(10, 100);
+                    let maxCount = Number(document.getElementById("signal-plot-count_" + idx).value);
+                    if (plotCharts[idx].config.data.labels.length > maxCount) {
+                        plotCharts[idx].config.data.labels = plotCharts[idx].config.data.labels.slice(Math.floor(maxCount * 0.2), maxCount);
+                        plotCharts[idx].config.data.datasets[0].data = plotCharts[idx].config.data.datasets[0].data.slice(Math.floor(maxCount * 0.2), maxCount);
+                        plotCharts[idx].update(0);
                     }
                     plotCharts[idx].config.data.labels.push(can_info[canId]["count"]);
                     plotCharts[idx].config.data.datasets[0].data.push(dbc_protocol[canId]["signals"][index]["value"]);
                     plotCharts[idx].config.data.datasets[0].label = dbc_protocol[canId]["signals"][index]["name"];
                     plotCharts[idx].update();
                     document.getElementById("signal-plot-value_" + idx).innerText = dbc_protocol[canId]["signals"][index]["value"];
-                    document.getElementById("signal-plot-time_" + idx).innerText = new Date().Format("yyyy-MM-dd_HH-mm-ss");
+                    document.getElementById("signal-plot-time_" + idx).innerText = new Date().Format("HH:mm:ss");
                 }
             });
         }
@@ -440,8 +466,8 @@ function updateBitsView(signalIdx, sig) {
 }
 
 function loadDbc(data) {
-    const SG_pattern = /.*SG_\W+(.*)\W+:\W+([0-9]+)\|([0-9]+)\W*@\W*([0-9]+)\W*([\+\-]+)\W+\(\W*([\-0-9\.]+)\W*,\W*([\-0-9\.]+)\)/;
-    const BO_pattern = /BO_\W+([0-9]+)\W+(.*)\W*:\W+([0-9]+)/;
+    const SG_pattern = /.*SG_\s+(.*)\s+:\s+([0-9]+)\|([0-9]+)\s*@\s*([0-9]+)\s*([\+\-]+)\s+\(\s*([-+]?[0-9]*\.?[0-9]+)\s*,\s*([-+]?[0-9]*\.?[0-9]+)\)/;
+    const BO_pattern = /BO_\s+([0-9]+)\s+(.*)\s*:\s+([0-9]+)/;
 
     data = data.split(/[\n]+/);
     let lastStdId = undefined;
