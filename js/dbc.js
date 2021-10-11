@@ -258,7 +258,9 @@ function addPlotChart() {
     let chartIdx = plotCharts.length;
     let tmp = document.createElement("div");
     tmp.id = "signal-plot_" + chartIdx;
-    tmp.innerHTML = String.format("<div><button onclick='removePlotSignal({0})'>unplot</button></div>" +
+    tmp.innerHTML = String.format("<div><button onclick='removePlotSignal({0})'>unplot</button> " +
+        "UpdateTime: <label id='signal-plot-time_{0}'></label> " +
+        "Value: <label id='signal-plot-value_{0}'></label></div>" +
         "<canvas id=\"signal-plot-chart_{0}\"></canvas>", chartIdx);
     document.getElementById("signal-plot").insertBefore(tmp, document.getElementById("signal-plot").firstChild);
     let ctx = document.getElementById("signal-plot-chart_" + chartIdx).getContext("2d");
@@ -284,7 +286,7 @@ function updatePlotView(canId) {
         if (s && canId === s.canId) {
             dbc_protocol[canId]["signals"].forEach((sig, index) => {
                 if (index === s.signalIdx) {
-                    dbcCalSignalValue(canId, index, sig, can_info[canId]);
+                    dbcCalSignalValue(canId, index, sig, can_info[canId]["bytes"]);
                     if (plotCharts[idx].config.data.labels.length > 100) {
                         plotCharts[idx].config.data.labels = plotCharts[idx].config.data.labels.slice(10, 100);
                         plotCharts[idx].config.data.datasets[0].data = plotCharts[idx].config.data.datasets[0].data.slice(10, 100);
@@ -293,6 +295,8 @@ function updatePlotView(canId) {
                     plotCharts[idx].config.data.datasets[0].data.push(dbc_protocol[canId]["signals"][index]["value"]);
                     plotCharts[idx].config.data.datasets[0].label = dbc_protocol[canId]["signals"][index]["name"];
                     plotCharts[idx].update();
+                    document.getElementById("signal-plot-value_" + idx).innerText = dbc_protocol[canId]["signals"][index]["value"];
+                    document.getElementById("signal-plot-time_" + idx).innerText = new Date().Format("yyyy-MM-dd_HH-mm-ss");
                 }
             });
         }
@@ -339,7 +343,6 @@ function updateDbcSignalView(clear) {
     if (clear) {
         document.getElementById("signals-list").innerHTML = "";
     }
-    dbcCalMsgSignalValue(curCanId, can_info[curCanId]["bytes"]);
     clearBitsView();
     dbc_p["signals"].forEach((sig, index) => {
         if (sig) {
@@ -369,7 +372,6 @@ function updateDbcSignalView(clear) {
                     "                    </div>\n" +
                     "                    <div>Factor: <input onchange=\"dbcEditOnChange(this)\" id=\"input-signal-factor_{3}\" type=\"number\" value=\"\"></div>\n" +
                     "                    <div>Offset: <input onchange=\"dbcEditOnChange(this)\" id=\"input-signal-offset_{3}\" type=\"number\" value=\"\"></div>\n" +
-                    "                    <div>Value: <input onchange=\"dbcEditOnChange(this)\" id=\"input-signal-value_{3}\" type=\"number\" readonly='readonly' value=\"\"></div>\n" +
                     "                </div>\n" +
                     "            </div>", name, curCanId, "signal-entry" + (index % 2), index);
                 document.getElementById('signals-list').insertBefore(tmp, document.getElementById('signals-list').firstChild);
@@ -383,7 +385,6 @@ function updateDbcSignalView(clear) {
             document.getElementById("select-signal-isSigned_" + index).value = sig["isSigned"].toString();
             document.getElementById("input-signal-factor_" + index).value = sig["factor"];
             document.getElementById("input-signal-offset_" + index).value = sig["offset"];
-            document.getElementById("input-signal-value_" + index).value = sig["value"];
 
             // 更新bit选区
             updateBitsView(index, sig);
