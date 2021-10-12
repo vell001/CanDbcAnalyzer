@@ -116,8 +116,7 @@ function Utils_ByteSub(bytes, startBit, len, order) {
         } else {
             lsbBit = startBit % 8;
             msbBit = lsbBit + len - 1;
-            let mask = Utils_ByteMask(lsbBit, msbBit);
-            ret = (bytes[startByte] & mask);
+            ret = (bytes[startByte] & Utils_ByteMask(lsbBit, msbBit));
             ret = ret >> lsbBit;
         }
     } else {

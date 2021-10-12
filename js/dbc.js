@@ -4,7 +4,7 @@ let curCanId = undefined;
 let can_info = {};
 
 function dbcAnalyzer(data) {
-    console.log("dbcAnalyzer");
+    // console.log("dbcAnalyzer");
     let id = (data[2] & 0xFF) + ((data[3] & 0xFF) << 8);
 
     let can_data = Array.from(data.subarray(4, 12));
@@ -169,7 +169,7 @@ function dbcCalSignalValue(stdId, sigIdx, sig, data) {
         v = v << 0;
     }
     dbc_protocol[stdId]["signals"][sigIdx]["value"] = v * sig["factor"] + sig["offset"];
-    console.log(sig["name"], v, dbc_protocol[stdId]["signals"][sigIdx]["value"]);
+    // console.log(sig["name"], v, dbc_protocol[stdId]["signals"][sigIdx]["value"]);
 }
 
 function dbcCalMsgSignalValue(stdId, data) {
@@ -365,11 +365,14 @@ function signalOnMouseOut(obj) {
 }
 
 function updateDbcSignalView(clear) {
-    let dbc_p = dbc_protocol[curCanId];
     if (clear) {
         document.getElementById("signals-list").innerHTML = "";
     }
     clearBitsView();
+    if (!(curCanId in dbc_protocol)) {
+        return;
+    }
+    let dbc_p = dbc_protocol[curCanId];
     dbc_p["signals"].forEach((sig, index) => {
         if (sig) {
             let name = sig["name"];
@@ -482,7 +485,6 @@ function loadDbc(data) {
                     "signals": []
                 }
                 lastStdId = stdId;
-                console.log(bo);
             }
             if (lastStdId) {
                 let sg = item.match(SG_pattern);
@@ -497,7 +499,6 @@ function loadDbc(data) {
                         "offset": Number(sg[7]),
                         "value": 0,
                     })
-                    console.log(dbc_protocol);
                 }
             }
         }

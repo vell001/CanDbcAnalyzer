@@ -10,13 +10,13 @@ async function openSerial(baud) {
         reader = port.readable.getReader();
         writer = port.writable.getWriter();
         // set how to write to device intervally
-        const writeInt = setInterval(async () => {
-            const commandFrame = new Uint8Array([
-                0xF1, 0x05, 0x80, 0x02, 0x00, 0x3F, 0x01, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00
-            ]);
-            commandFrame[12] = checksumAdd(commandFrame.subarray(0, 12))
-            await writer.write(commandFrame);
-        }, 1000); // send a frame every 3000ms
+        // const writeInt = setInterval(async () => {
+        //     const commandFrame = new Uint8Array([
+        //         0xF1, 0x05, 0x80, 0x02, 0x00, 0x3F, 0x01, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00
+        //     ]);
+        //     commandFrame[12] = checksumAdd(commandFrame.subarray(0, 12))
+        //     await writer.write(commandFrame);
+        // }, 1000); // send a frame every 3000ms
 
         if (port.readable) {
             document.getElementById("btnOpenSerial").innerText = "关闭串口";
@@ -35,8 +35,13 @@ async function openSerial(baud) {
                     }
                     if (value) {
                         /*** TODO: deal with the data value ***/
-                        console.log(value);
-                        parseData(value);
+                        // console.log(value);
+
+                        try {
+                            parseData(value);
+                        } catch (error) {
+                            console.error(error);
+                        }
                     }
                 }
             } catch (error) {
@@ -46,7 +51,7 @@ async function openSerial(baud) {
                 console.log(port.readable);
             }
         }
-        clearInterval(writeInt);
+        // clearInterval(writeInt);
         document.getElementById("btnOpenSerial").innerText = "打开串口";
         await port.close();
         closed = true;
