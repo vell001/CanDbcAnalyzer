@@ -149,13 +149,26 @@ function updateCanBitData(data) {
     if (data["bytes"]) {
         data["bytes"].forEach((byte, index) => {
             let byte_value_dom = document.getElementById("byte_value_" + index);
-            if (parseInt(byte_value_dom.innerText, 16) !== byte) {
+            // if (parseInt(byte_value_dom.innerText, 16) !== byte) {
                 byte_value_dom.innerText = byteToHex(byte);
                 let s = byteToBin(byte);
                 for (let i = 0; i < 8; i++) {
-                    document.getElementById("bit_value_" + (index * 8 + i)).innerText = s.charAt(7 - i);
+                    let dom = document.getElementById("bit_value_" + (index * 8 + i));
+                    let bitValue = s.charAt(7 - i);
+                    let nowMs = new Date().getTime();
+                    let lastUpdateTime;
+                    if (dom.innerText !== bitValue || !dom.hasAttribute("lastUpdateTime")) {
+                        dom.innerText = bitValue;
+                        dom.setAttribute("lastUpdateTime", nowMs.toString());
+                        lastUpdateTime = nowMs;
+                    } else {
+                        lastUpdateTime = Number.parseInt(dom.getAttribute("lastUpdateTime"));
+                    }
+                    let colorValue = (nowMs - lastUpdateTime) / 10;
+                    colorValue = colorValue > 255 ? 255 : colorValue;
+                    dom.parentElement.style.backgroundColor = "rgb(" + 255 + "," + 255 + "," + colorValue + ")";
                 }
-            }
+            // }
         });
     }
 }
@@ -226,7 +239,7 @@ function dbcBitsOnClick(obj) {
         return;
     }
     let bitIdx = getIdxById(obj);
-    if(!(curCanId in dbc_protocol)) {
+    if (!(curCanId in dbc_protocol)) {
         dbc_protocol[curCanId] = {
             "name": document.getElementById("input-msg-name").value,
             "byteNum": Number(document.getElementById("input-msg-size").value),
