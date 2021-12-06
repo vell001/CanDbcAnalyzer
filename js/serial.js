@@ -2,6 +2,7 @@ let port;
 let reader;
 let writer;
 let closed = true;
+let isChecksum = true;
 
 async function openSerial(baud) {
     if (document.getElementById("btnOpenSerial").innerText === "打开串口") {
@@ -63,10 +64,14 @@ async function openSerial(baud) {
 
 let canData = new Uint8Array(13);
 let canDataIdx = 0;
+let dataTempList = [];
 
 function parseData(data) {
-    for (let i=0;i<data.length;i++) {
-        let b = data[i];
+    for (let i = 0; i < data.length; i++) {
+        dataTempList.push(data[i]);
+    }
+    while (dataTempList.length > canDataIdx) {
+        let b = dataTempList[canDataIdx];
         if (canDataIdx === 0 && b === 0xF1) {
             canData[canDataIdx] = b;
             canDataIdx++;
@@ -77,15 +82,36 @@ function parseData(data) {
             canData[canDataIdx] = b;
             canDataIdx++;
         } else if (canDataIdx === 12) {
-            canData[12] = checksumAdd(canData.subarray(0, 12))
-            if (b === canData[12]) {
-                dbcAnalyzer(canData);
+            let isDataOk = false;
+            if (isChecksum) {
+                canData[12] = checksumAdd(canData.subarray(0, 12))
+                if (b === canData[12]) {
+                    dbcAnalyzer(canData);
+                    isDataOk = true;
+                } else {
+                    console.log("checksum error", canData[12], b);
+                }
             } else {
-                console.log("checksum error", canData[12], b);
+                dbcAnalyzer(canData);
+                isDataOk = true;
             }
+
+            if (!isDataOk) {
+                dataTempList.shift();
+            } else {
+                dataTempList.splice(0, canDataIdx + 1);
+            }
+
+            canDataIdx = 0;
+        } else {
+            dataTempList.shift();
             canDataIdx = 0;
         }
     }
+}
+
+function checksumCheckOnChange() {
+    isChecksum = document.getElementById("withCheckSum").checked === "checked";
 }
 
 function checksumAdd(data) {

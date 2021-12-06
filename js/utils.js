@@ -70,6 +70,17 @@ function Utils_ByteMask(start, end) {
     return (((0xFF << start) & (~(0xFF << (end + 1))))) & 0xFF;
 }
 
+function Utils_ToSigned(d, bitLen) {
+    let max = (0x01 << bitLen) - 1;
+    let signBitMask = 0x01 << (bitLen - 1);
+    let isSign = (d & signBitMask) === signBitMask; // 是否是负数
+    if (isSign) {
+        return -1 * (max - d);
+    } else {
+        return d;
+    }
+}
+
 function Utils_ByteSub2(bytes, startBit,bitLen,order) {
     let count = 1;
     let endBit = startBit;
@@ -102,34 +113,35 @@ function Utils_ByteSub(bytes, startBit, len, order) {
     let i = 0;
     let ret = 0;
     let startByte = Math.floor(startBit / 8);
-    let endByte = Math.floor((startBit + len) / 8);
+    let endByte;
     let msbBit; // 一个字节内大端位置 0-7
     let lsbBit; // 一个字节内小端位置 0-7
 
-    if (startByte === endByte) {
-        // 同一字节内，
-        if (order === 0) { // 大端在前
-            msbBit = startBit % 8;
+    if (order === 0) { // 大端在前
+        msbBit = startBit % 8;
+        endByte = (len - (msbBit + 1)) / 8;
+        if(endByte<=0){
+            // 同一字节内
             lsbBit = msbBit - len + 1;
             ret = (bytes[startByte] & Utils_ByteMask(lsbBit, msbBit));
             ret = ret >> lsbBit;
         } else {
-            lsbBit = startBit % 8;
-            msbBit = lsbBit + len - 1;
-            ret = (bytes[startByte] & Utils_ByteMask(lsbBit, msbBit));
-            ret = ret >> lsbBit;
-        }
-    } else {
-        if (order === 0) { // 大端在前
-            msbBit = startBit % 8;
+            endByte = Math.floor(endByte) + 1 + startByte;
             lsbBit = 8 - ((len - (msbBit + 1)) % 8);
             ret = (bytes[startByte] & Utils_ByteMask(0, msbBit));
             for (i = startByte + 1; i < endByte; i++) {
                 ret = (ret << 8) + (bytes[i] & 0xFF);
             }
             ret = (ret << (8 - lsbBit)) + (bytes[endByte] >> lsbBit);
-
-        } else { // 小端在前
+        }
+    } else { // 小端在前
+        endByte = Math.floor((startBit + len) / 8);
+        if (startByte === endByte) {
+            lsbBit = startBit % 8;
+            msbBit = lsbBit + len - 1;
+            ret = (bytes[startByte] & Utils_ByteMask(lsbBit, msbBit));
+            ret = ret >> lsbBit;
+        } else {
             lsbBit = startBit % 8;
             msbBit = (len + startBit) % 8 - 1;
 
@@ -140,6 +152,5 @@ function Utils_ByteSub(bytes, startBit, len, order) {
             ret = (ret << (8 - lsbBit)) + (bytes[startByte] >> lsbBit);
         }
     }
-
     return ret;
 }

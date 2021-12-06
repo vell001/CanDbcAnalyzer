@@ -172,14 +172,13 @@ function updateCanBitData(data) {
         });
     }
 }
-
 function dbcCalSignalValue(stdId, sigIdx, sig, data) {
     if (!sig) {
         return;
     }
     let v = Utils_ByteSub(data, sig["startBit"], sig["bitLen"], sig["byteOrder"]);
-    if (sig["isSigned"] === 1) {
-        v = v << 0;
+    if (sig["isSigned"] === 1 ) {
+        v = Utils_ToSigned(v, sig["bitLen"]);
     }
     dbc_protocol[stdId]["signals"][sigIdx]["value"] = v * sig["factor"] + sig["offset"];
     // console.log(sig["name"], v, dbc_protocol[stdId]["signals"][sigIdx]["value"]);

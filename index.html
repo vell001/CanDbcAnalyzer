@@ -19,7 +19,7 @@
                 <option value="115200" selected="selected">115200</option>
             </select>
             <button id="btnOpenSerial" onclick="openSerial(document.getElementById('baud').value)">打开串口</button>
-
+            校验和<input id="withCheckSum" type="checkbox" checked="checked" onchange="checksumCheckOnChange()"/>
         </div>
         <div>
             加载DBC文件: <input type="file" id="input-dbc-file"/>
