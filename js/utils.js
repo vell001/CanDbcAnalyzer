@@ -1,4 +1,3 @@
-
 function fakeClick(obj) {
     let ev = document.createEvent("MouseEvents");
     ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
@@ -81,27 +80,6 @@ function Utils_ToSigned(d, bitLen) {
     }
 }
 
-function Utils_ByteSub2(bytes, startBit,bitLen,order) {
-    let count = 1;
-    let endBit = startBit;
-    let value = 0;
-    if (order === 0) {
-        // 大端在前
-        while (count <= bitLen) {
-            count++;
-            endBit--;
-            if (endBit % 8 === 7) {
-                endBit += 16;
-            }
-        }
-    } else {
-        while (count <= bitLen) {
-            if (endBit%8)
-            count++;
-            endBit++;
-        }
-    }
-}
 /**
  * 字节裁剪
  * @param bytes
@@ -119,14 +97,14 @@ function Utils_ByteSub(bytes, startBit, len, order) {
 
     if (order === 0) { // 大端在前
         msbBit = startBit % 8;
-        endByte = (len - (msbBit + 1)) / 8;
-        if(endByte<=0){
+        let bitLenWithoutMsbByte = len - (msbBit + 1);
+        if (bitLenWithoutMsbByte <= 0) {
             // 同一字节内
             lsbBit = msbBit - len + 1;
             ret = (bytes[startByte] & Utils_ByteMask(lsbBit, msbBit));
             ret = ret >> lsbBit;
         } else {
-            endByte = Math.floor(endByte) + 1 + startByte;
+            endByte = Math.floor(bitLenWithoutMsbByte / 8) + 1 + startByte;
             lsbBit = 8 - ((len - (msbBit + 1)) % 8);
             ret = (bytes[startByte] & Utils_ByteMask(0, msbBit));
             for (i = startByte + 1; i < endByte; i++) {
@@ -152,5 +130,6 @@ function Utils_ByteSub(bytes, startBit, len, order) {
             ret = (ret << (8 - lsbBit)) + (bytes[startByte] >> lsbBit);
         }
     }
+    // console.log(startByte, endByte, msbBit, lsbBit);
     return ret;
 }
