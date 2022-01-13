@@ -26,14 +26,14 @@ function updateCanInfo(stdId, data) {
         document.getElementById("tbody-can-data").innerHTML += String.format("\n" +
             "            <tr id='can_data_{0}' onclick=\"canDataOnClick(this)\" class=\"cabana-meta-messages-list-item\">\n" +
             "                <td id='can_name_{0}'></td>\n" +
-            "                <td id='can_id_{0}'>{0}</td>\n" +
+            "                <td id='can_id_{0}'>{0}[{1}]</td>\n" +
             "                <td id='can_count_{0}'></td>\n" +
             "                <td>\n" +
             "                    <div id='can_bytes_{0}' class=\"cabana-meta-messages-list-item-bytes\">\n" +
             "                        \n" +
             "                    </div>\n" +
             "                </td>\n" +
-            "            </tr>", stdId)
+            "            </tr>", stdId, stdId.toString(16));
     }
     if (data) {
         can_info[stdId]["bytes"] = data;
