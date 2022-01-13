@@ -333,7 +333,7 @@ function updatePlotView(canId) {
                     plotCharts[idx].config.data.datasets[0].data.push(dbc_protocol[canId]["signals"][index]["value"]);
                     plotCharts[idx].config.data.datasets[0].label = dbc_protocol[canId]["signals"][index]["name"];
                     plotCharts[idx].update();
-                    document.getElementById("signal-plot-value_" + idx).innerText = dbc_protocol[canId]["signals"][index]["value"];
+                    document.getElementById("signal-plot-value_" + idx).innerText = dbc_protocol[canId]["signals"][index]["value"].toFixed(4);
                     document.getElementById("signal-plot-time_" + idx).innerText = new Date().Format("HH:mm:ss");
                 }
             });
