@@ -464,7 +464,7 @@ function updateBitsView(signalIdx, sig) {
             }
             count++;
             endBit--;
-            if (endBit % 8 === 7) {
+            if (endBit % 8 === 7 || endBit < 0) {
                 endBit += 16;
             }
         }
