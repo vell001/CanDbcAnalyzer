@@ -19,15 +19,23 @@
                 <option value="115200" selected="selected">115200</option>
             </select>
             <button id="btnOpenSerial" onclick="openSerial(document.getElementById('baud').value)">打开串口</button>
-            校验和<input id="withCheckSum" type="checkbox" checked="checked" onchange="checksumCheckOnChange()"/>
+            校验和<input id="withCheckSum" type="checkbox" onchange="checksumCheckOnChange()"/>
         </div>
         <div>
             加载DBC文件: <input type="file" id="input-dbc-file"/>
             <button onclick="saveDbc()">保存DBC</button>
         </div>
+        <div id="can-info-selector">
+            <div id="can-info-selector-ID" class="can-info-selector-item is-selected"
+                 onclick="canInfoSelectorOnClick(this)">按ID显示
+            </div>
+            <div id="can-info-selector-SG" class="can-info-selector-item"
+                 onclick="canInfoSelectorOnClick(this)">按SG显示
+            </div>
+        </div>
     </div>
-    <div class="can-data-list">
-        <table cellpadding="5">
+    <div class="can-data-list" id="can-data-list">
+        <table cellpadding="5" id="can-data-list-ID">
             <thead>
             <tr>
                 <td>Name</td>
@@ -39,13 +47,25 @@
             <tbody id="tbody-can-data">
             </tbody>
         </table>
+        <table cellpadding="5"  id="can-data-list-SG" style="display: none">
+            <thead>
+            <tr>
+                <td>Name<span id="sg-name-error" style="display: none"></span></td>
+                <td>ID</td>
+                <td>Count</td>
+                <td>Value</td>
+            </tr>
+            </thead>
+            <tbody id="tbody-sg-data">
+            </tbody>
+        </table>
     </div>
 </div>
 <div class="dbc-info">
     <div class="dbc-edit">
         <div id="dbc-edit-msg-info">
-        Name: <input id="input-msg-name" value="" onchange="dbcEditOnChange(this)"/> Size:
-        <input id="input-msg-size" value="" onchange="dbcEditOnChange(this)" class="input-number"/>
+            Name: <input id="input-msg-name" value="" onchange="dbcEditOnChange(this)"/> Size:
+            <input id="input-msg-size" value="" onchange="dbcEditOnChange(this)" class="input-number"/>
             <button id="button-msg-delete" onclick="deleteCurMsg()">Delete</button>
         </div>
         <table cellspacing="0" id="dbc_data_bits">

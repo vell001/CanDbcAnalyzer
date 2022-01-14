@@ -2,7 +2,7 @@ let port;
 let reader;
 let writer;
 let closed = true;
-let isChecksum = true;
+let isChecksum = false;
 
 async function openSerial(baud) {
     if (document.getElementById("btnOpenSerial").innerText === "打开串口") {

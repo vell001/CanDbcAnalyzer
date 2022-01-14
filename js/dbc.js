@@ -2,6 +2,8 @@ let dbc_protocol = {};
 
 let curCanId = undefined;
 let can_info = {};
+let sg_info = {};
+let isUpdateSgInfo = false;
 
 function dbcAnalyzer(data) {
     // console.log("dbcAnalyzer");
@@ -9,11 +11,48 @@ function dbcAnalyzer(data) {
 
     let can_data = Array.from(data.subarray(4, 12));
     updateCanInfo(id, can_data);
+    if (isUpdateSgInfo) {
+        updateSgInfo(id, can_data);
+    }
     if (curCanId && curCanId === id) {
         updateCanBitData(can_info[id]);
     }
 
     updatePlotView(id);
+}
+
+function updateSgInfo(stdId, data) {
+    if (!(stdId in dbc_protocol)) {
+        return;
+    }
+
+    dbc_protocol[stdId]["signals"].forEach((sig, index) => {
+        let sigName = sig["name"] + "_" + stdId;
+        if (!(sigName in sg_info)) {
+            sg_info[sigName] = {
+                "signalName": sig["name"],
+                "canId": stdId,
+            }
+            document.getElementById("tbody-sg-data").innerHTML += String.format(
+                "            <tr id='sg_data_{1}' onclick=\"canDataOnClick(this)\" class=\"cabana-meta-messages-list-item\">\n" +
+                "                <td id='sg_name_{0}' class='sg_name'></td>\n" +
+                "                <td id='sg_can_id_{0}'>{1}[{2}]</td>\n" +
+                "                <td id='sg_count_{0}'></td>\n" +
+                "                <td>\n" +
+                "                    <div id='sg_value_{0}' class=\"cabana-meta-messages-list-item-bytes\">\n" +
+                "                        \n" +
+                "                    </div>\n" +
+                "                </td>\n" +
+                "            </tr>", sigName, stdId, Number.parseInt(stdId).toString(16).toUpperCase());
+        }
+
+        document.getElementById("sg_name_" + sigName).innerText = sig["name"];
+        if (data) {
+            dbcCalSignalValue(stdId, index, sig, data);
+            document.getElementById("sg_count_" + sigName).innerText = can_info[stdId]["count"];
+            document.getElementById("sg_value_" + sigName).innerText = dbc_protocol[stdId]["signals"][index]["value"].toFixed(4);
+        }
+    });
 }
 
 function updateCanInfo(stdId, data) {
@@ -100,13 +139,13 @@ function dbcEditOnChange(obj) {
     } else if (obj.id.startsWith("input-signal-name")) {
         let sigIdx = getIdxById(obj);
         let isExist = false;
-        dbc_protocol.forEach((canId, idx) => {
+        for (let canId in dbc_protocol) {
             dbc_protocol[canId]["signals"].forEach((sig, idx) => {
                 if (sig && idx !== sigIdx && sig["name"] === obj.value) {
                     isExist = true;
                 }
             });
-        });
+        }
         if (isExist) {
             document.getElementById("input-signal-name-error_" + sigIdx).hidden = false;
         } else {
@@ -546,4 +585,32 @@ function saveDbc() {
     }
     console.log(text);
     exportRaw(new Date().Format("yyyy-MM-dd_HH-mm-ss") + ".dbc", text);
+}
+
+function canInfoSelectorOnClick(item) {
+    let selectors = document.getElementById("can-info-selector");
+    for (let i = 0; i < selectors.children.length; i++) {
+        let obj = selectors.children[i]
+        obj.className = obj.className.replace(" is-selected", "");
+    }
+    item.className += " is-selected";
+    let tables = document.getElementById("can-data-list").getElementsByTagName("table");
+
+    for (let i = 0; i < tables.length; i++) {
+        tables[i].style.display = "none";
+    }
+    if (item.id === "can-info-selector-ID") {
+        document.getElementById("can-data-list-ID").style.display = "";
+        isUpdateSgInfo = false;
+    } else if (item.id === "can-info-selector-SG") {
+        document.getElementById("can-data-list-SG").style.display = "";
+        isUpdateSgInfo = true;
+        // 暴力清理下重来
+        sg_info = {};
+        document.getElementById("tbody-sg-data").innerHTML = "";
+
+        for (let id in dbc_protocol) {
+            updateSgInfo(id, undefined);
+        }
+    }
 }
