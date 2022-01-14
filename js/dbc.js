@@ -33,7 +33,7 @@ function updateCanInfo(stdId, data) {
             "                        \n" +
             "                    </div>\n" +
             "                </td>\n" +
-            "            </tr>", stdId, stdId.toString(16));
+            "            </tr>", stdId, Number.parseInt(stdId).toString(16).toUpperCase());
     }
     if (data) {
         can_info[stdId]["bytes"] = data;
@@ -100,10 +100,12 @@ function dbcEditOnChange(obj) {
     } else if (obj.id.startsWith("input-signal-name")) {
         let sigIdx = getIdxById(obj);
         let isExist = false;
-        dbc_protocol[curCanId]["signals"].forEach((sig, idx) => {
-            if (sig && idx !== sigIdx && sig["name"] === obj.value) {
-                isExist = true;
-            }
+        dbc_protocol.forEach((canId, idx) => {
+            dbc_protocol[canId]["signals"].forEach((sig, idx) => {
+                if (sig && idx !== sigIdx && sig["name"] === obj.value) {
+                    isExist = true;
+                }
+            });
         });
         if (isExist) {
             document.getElementById("input-signal-name-error_" + sigIdx).hidden = false;
@@ -150,34 +152,35 @@ function updateCanBitData(data) {
         data["bytes"].forEach((byte, index) => {
             let byte_value_dom = document.getElementById("byte_value_" + index);
             // if (parseInt(byte_value_dom.innerText, 16) !== byte) {
-                byte_value_dom.innerText = byteToHex(byte);
-                let s = byteToBin(byte);
-                for (let i = 0; i < 8; i++) {
-                    let dom = document.getElementById("bit_value_" + (index * 8 + i));
-                    let bitValue = s.charAt(7 - i);
-                    let nowMs = new Date().getTime();
-                    let lastUpdateTime;
-                    if (dom.innerText !== bitValue || !dom.hasAttribute("lastUpdateTime")) {
-                        dom.innerText = bitValue;
-                        dom.setAttribute("lastUpdateTime", nowMs.toString());
-                        lastUpdateTime = nowMs;
-                    } else {
-                        lastUpdateTime = Number.parseInt(dom.getAttribute("lastUpdateTime"));
-                    }
-                    let colorValue = (nowMs - lastUpdateTime) / 10;
-                    colorValue = colorValue > 255 ? 255 : colorValue;
-                    dom.parentElement.style.backgroundColor = "rgb(" + 255 + "," + 255 + "," + colorValue + ")";
+            byte_value_dom.innerText = byteToHex(byte);
+            let s = byteToBin(byte);
+            for (let i = 0; i < 8; i++) {
+                let dom = document.getElementById("bit_value_" + (index * 8 + i));
+                let bitValue = s.charAt(7 - i);
+                let nowMs = new Date().getTime();
+                let lastUpdateTime;
+                if (dom.innerText !== bitValue || !dom.hasAttribute("lastUpdateTime")) {
+                    dom.innerText = bitValue;
+                    dom.setAttribute("lastUpdateTime", nowMs.toString());
+                    lastUpdateTime = nowMs;
+                } else {
+                    lastUpdateTime = Number.parseInt(dom.getAttribute("lastUpdateTime"));
                 }
+                let colorValue = (nowMs - lastUpdateTime) / 10;
+                colorValue = colorValue > 255 ? 255 : colorValue;
+                dom.parentElement.style.backgroundColor = "rgb(" + 255 + "," + 255 + "," + colorValue + ")";
+            }
             // }
         });
     }
 }
+
 function dbcCalSignalValue(stdId, sigIdx, sig, data) {
     if (!sig) {
         return;
     }
     let v = Utils_ByteSub(data, sig["startBit"], sig["bitLen"], sig["byteOrder"]);
-    if (sig["isSigned"] === 1 ) {
+    if (sig["isSigned"] === 1) {
         v = Utils_ToSigned(v, sig["bitLen"]);
     }
     dbc_protocol[stdId]["signals"][sigIdx]["value"] = v * sig["factor"] + sig["offset"];
