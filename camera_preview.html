@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>相机预览</title>
+    <script>
+        function cover_opacity_change() {
+            let value = document.getElementById("cover_opacity").value;
+            let c = document.getElementsByClassName("camera_cover");
+            for (let i = 0; i < c.length; i++) {
+                c[i].style.opacity = "" + value / 100;
+            }
+        }
+    </script>
+    <style>
+        * {
+            border-style: none;
+            padding: 0 0 0 0;
+            margin: 0 0 0 0;
+        }
+
+        .video {
+            width: 100%;
+            height: 56vw;
+        }
+
+        .video_container {
+            position: absolute;
+            z-index: 1;
+        }
+
+        .video_grid {
+            width: 100%;
+            height: 56vw;
+            position: relative;
+            display: block;
+        }
+
+        .line_v {
+            width: 3px;
+            height: 56vw;
+            margin: 0 auto;
+            left: 50%;
+            background: aqua;
+            position: absolute;
+            z-index: 200;
+        }
+
+        .line_h {
+            width: 100%;
+            height: 3px;
+            top: 28vw;
+            background: aqua;
+            position: absolute;
+            z-index: 200;
+        }
+
+        .video_info {
+            width: auto;
+            position: absolute;
+            z-index: 300;
+            background: aqua;
+            padding: 3px;
+        }
+
+        .camera_cover {
+            opacity: 0.7;
+            z-index: 11;
+        }
+
+        img.camera_cover {
+            content: url("data:image/png;base64,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");
+        }
+
+        .setting {
+            position: fixed;
+            left: 100px;
+            width: auto;
+            height: auto;
+            background: aqua;
+            padding: 3px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<div class="setting">
+    <div>
+        蒙层透明度调节:<input id="cover_opacity" type="range" min="0" max="100" value="70" oninput="cover_opacity_change()"/>
+    </div>
+</div>
+<div class="video_container">
+    <div class="video_grid">
+        <!--        <div class="line_v"></div>-->
+        <!--        <div class="line_h"></div>-->
+        <img class="video" id="video0" src="http://192.168.2.1:8090" alt="图像不存在"/></div>
+    <div class="video_grid">
+        <!--        <div class="line_v"></div>-->
+        <!--        <div class="line_h"></div>-->
+        <img class="video" id="video1" src="http://192.168.2.1:8091" alt="图像不存在"/></div>
+    <div class="video_grid">
+        <!--        <div class="line_v"></div>-->
+        <!--        <div class="line_h"></div>-->
+        <img class="video" id="video2" src="http://192.168.2.1:8092" alt="图像不存在"/></div>
+    <div class="video_grid">
+        <!--        <div class="line_v"></div>-->
+        <!--        <div class="line_h"></div>-->
+        <img class="video" id="video3" src="http://192.168.2.1:8093" alt="图像不存在"/></div>
+</div>
+<div class="video_container">
+    <div class="video_grid">
+        <span class="video_info">前摄像头</span>
+        <img class="video camera_cover"/>
+    </div>
+    <div class="video_grid">
+        <span class="video_info">后摄像头</span>
+        <img class="video camera_cover"/>
+    </div>
+    <div class="video_grid">
+        <span class="video_info">左摄像头</span>
+        <img class="video camera_cover"/>
+    </div>
+    <div class="video_grid">
+        <span class="video_info">右摄像头</span>
+        <img class="video camera_cover"/>
+    </div>
+</div>
+</body>
+</html>
