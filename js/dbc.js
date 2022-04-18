@@ -256,7 +256,11 @@ window.onload = function () {
         }
         const reader = new FileReader();
         reader.onload = function () {
-            loadDbc(reader.result);
+            loadJson(reader.result);
+            // loadDbc(reader.result);
+            for (let id in dbc_protocol) {
+                updateCanInfo(id, undefined);
+            }
         }
         reader.readAsText(this.files[0]);
     });
@@ -538,6 +542,10 @@ function updateBitsView(signalIdx, sig) {
     }
 }
 
+function loadJson(data) {
+    dbc_protocol = JSON.parse(data);
+}
+
 function loadDbc(data) {
     const SG_pattern = /.*SG_\s+(.*)\s+:\s+([0-9]+)\|([0-9]+)\s*@\s*([0-9]+)\s*([\+\-]+)\s+\(\s*([-+]?[0-9]*\.?[0-9]+)\s*,\s*([-+]?[0-9]*\.?[0-9]+)\)/;
     const BO_pattern = /BO_\s+([0-9]+)\s+(.*)\s*:\s+([0-9]+)/;
@@ -574,10 +582,6 @@ function loadDbc(data) {
             }
         }
     });
-
-    for (let id in dbc_protocol) {
-        updateCanInfo(id, undefined);
-    }
 }
 
 function saveDbc() {
@@ -602,8 +606,6 @@ function saveDbc() {
     }
     console.log(text);
     exportRaw(new Date().Format("yyyy-MM-dd_HH-mm-ss") + ".dbc", text);
-
-    saveJson();
 }
 
 function saveJson() {

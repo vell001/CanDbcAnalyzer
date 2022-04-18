@@ -23,7 +23,7 @@
         </div>
         <div>
             加载DBC文件: <input type="file" id="input-dbc-file"/>
-            <button onclick="saveDbc()">保存DBC</button>
+            <button onclick="saveJson()">保存DBC</button>
         </div>
         <div id="can-info-selector">
             <div id="can-info-selector-ID" class="can-info-selector-item is-selected"
@@ -47,7 +47,7 @@
             <tbody id="tbody-can-data">
             </tbody>
         </table>
-        <table cellpadding="5"  id="can-data-list-SG" style="display: none">
+        <table cellpadding="5" id="can-data-list-SG" style="display: none">
             <thead>
             <tr>
                 <td>Name<span id="sg-name-error" style="display: none"></span></td>
