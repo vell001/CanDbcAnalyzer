@@ -183,6 +183,16 @@ function dbcEditOnChange(obj) {
         let v = Number(obj.value);
         dbc_protocol[curCanId]["signals"][sigIdx]["offset"] = v;
         updateDbcSignalView(false);
+    } else if (obj.id.startsWith("input-signal-valueMap")) {
+        let sigIdx = getIdxById(obj);
+        try {
+            dbc_protocol[curCanId]["signals"][sigIdx]["valueMap"] = JSON.parse(obj.value);
+            document.getElementById("input-signal-valueMap-error_" + sigIdx).hidden = true;
+        } catch (e) {
+            document.getElementById("input-signal-valueMap-error_" + sigIdx).hidden = false;
+            dbc_protocol[curCanId]["signals"][sigIdx]["valueMap"] = {};
+            console.log(e);
+        }
     }
 }
 
@@ -209,7 +219,6 @@ function updateCanBitData(data) {
                 colorValue = colorValue > 255 ? 255 : colorValue;
                 dom.parentElement.style.backgroundColor = "rgb(" + 255 + "," + 255 + "," + colorValue + ")";
             }
-            // }
         });
     }
 }
@@ -222,7 +231,11 @@ function dbcCalSignalValue(stdId, sigIdx, sig, data) {
     if (sig["isSigned"] === 1) {
         v = Utils_ToSigned(v, sig["bitLen"]);
     }
-    dbc_protocol[stdId]["signals"][sigIdx]["value"] = v * sig["factor"] + sig["offset"];
+    let outValue = v * sig["factor"] + sig["offset"];
+    if(outValue.toString() in sig["valueMap"]){
+        outValue = sig["valueMap"][outValue.toString()];
+    }
+    dbc_protocol[stdId]["signals"][sigIdx]["value"] = outValue;
     // console.log(sig["name"], v, dbc_protocol[stdId]["signals"][sigIdx]["value"]);
 }
 
@@ -294,6 +307,7 @@ function dbcBitsOnClick(obj) {
             "isSigned": 0,
             "factor": 1,
             "offset": 0,
+            "valueMap": {},
             "value": 0,
         }
         if (bitIdx > bitClickStart) {
@@ -455,6 +469,7 @@ function updateDbcSignalView(clear) {
                     "                    </div>\n" +
                     "                    <div>Factor: <input onchange=\"dbcEditOnChange(this)\" id=\"input-signal-factor_{3}\" type=\"number\" value=\"\"></div>\n" +
                     "                    <div>Offset: <input onchange=\"dbcEditOnChange(this)\" id=\"input-signal-offset_{3}\" type=\"number\" value=\"\"></div>\n" +
+                    "                    <div>ValueMap: <input onchange=\"dbcEditOnChange(this)\" id=\"input-signal-valueMap_{3}\" type=\"text\" value=\"\"><label id=\"input-signal-valueMap-error_{3}\" hidden='hidden'>格式错误</label></div>\n" +
                     "                </div>\n" +
                     "            </div>", name, curCanId, "signal-entry" + (index % 2), index);
                 document.getElementById('signals-list').insertBefore(tmp, document.getElementById('signals-list').firstChild);
@@ -468,6 +483,7 @@ function updateDbcSignalView(clear) {
             document.getElementById("select-signal-isSigned_" + index).value = sig["isSigned"].toString();
             document.getElementById("input-signal-factor_" + index).value = sig["factor"];
             document.getElementById("input-signal-offset_" + index).value = sig["offset"];
+            document.getElementById("input-signal-valueMap_" + index).value = JSON.stringify(sig["valueMap"]);
 
             // 更新bit选区
             updateBitsView(index, sig);
@@ -551,6 +567,7 @@ function loadDbc(data) {
                         "isSigned": sg[5] === "-" ? 1 : 0,
                         "factor": Number(sg[6]),
                         "offset": Number(sg[7]),
+                        "valueMap": {},
                         "value": 0,
                     })
                 }
@@ -585,6 +602,14 @@ function saveDbc() {
     }
     console.log(text);
     exportRaw(new Date().Format("yyyy-MM-dd_HH-mm-ss") + ".dbc", text);
+
+    saveJson();
+}
+
+function saveJson() {
+    let text = JSON.stringify(dbc_protocol);
+    console.log(text);
+    exportRaw(new Date().Format("yyyy-MM-dd_HH-mm-ss") + ".json", text);
 }
 
 function canInfoSelectorOnClick(item) {
