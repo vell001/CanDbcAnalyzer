@@ -16,14 +16,15 @@
         <div>
             <select id="baud">
                 <option value="9600">9600</option>
-                <option value="115200" selected="selected">115200</option>
+                <option value="115200">115200</option>
+                <option value="500000" selected="selected">500000</option>
             </select>
             <button id="btnOpenSerial" onclick="openSerial(document.getElementById('baud').value)">打开串口</button>
             校验和<input id="withCheckSum" type="checkbox" onchange="checksumCheckOnChange()"/>
         </div>
         <div>
             加载DBC文件: <input type="file" id="input-dbc-file"/>
-            <button onclick="saveJson()">保存DBC</button>
+            <button onclick="saveJson()">保存DBC文件</button>
         </div>
         <div id="can-info-selector">
             <div id="can-info-selector-ID" class="can-info-selector-item is-selected"
