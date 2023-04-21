@@ -197,3 +197,12 @@ div {
 .can-info-selector-item:hover {
     background: rgb(200, 200, 200);
 }
+#input-can-id {
+    width: 60px;
+}
+#input-can-data {
+    min-width: 230px;
+}
+#error_msg{
+    color: rgb(90, 189, 9);
+}

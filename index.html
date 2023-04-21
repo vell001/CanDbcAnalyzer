@@ -26,6 +26,13 @@
             加载DBC文件: <input type="file" id="input-dbc-file"/>
             <button onclick="saveJson()">保存DBC文件</button>
         </div>
+        <div>
+            can_id:<input id="input-can-id" width="10px" value="1234"/> data: <input id="input-can-data" width="10px" value="12 34 56 78 90 AB CD EF"/>
+            <button onclick="sendCanData()">发送</button>
+        </div>
+        <div id = "error_msg">
+
+        </div>
         <div id="can-info-selector">
             <div id="can-info-selector-ID" class="can-info-selector-item is-selected"
                  onclick="canInfoSelectorOnClick(this)">按ID显示

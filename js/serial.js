@@ -6,6 +6,14 @@ let isChecksum = false;
 
 async function openSerial(baud) {
     if (document.getElementById("btnOpenSerial").innerText === "打开串口") {
+        if (port !== undefined) {
+            try {
+                reader.releaseLock();
+                writer.releaseLock();
+                port.close();
+            } finally {
+            }
+        }
         port = await navigator.serial.requestPort();
         await port.open({baudRate: baud});
         reader = port.readable.getReader();
@@ -48,6 +56,7 @@ async function openSerial(baud) {
             } catch (error) {
                 // Handle non-fatal read error.
                 console.error(error);
+                break;
             } finally {
                 console.log(port.readable);
             }
@@ -120,4 +129,41 @@ function checksumAdd(data) {
         sum += item;
     });
     return sum & 0xff;
+}
+
+function sendCanData() {
+    let can_id_ele = document.getElementById("input-can-id");
+    let can_data_ele = document.getElementById("input-can-data");
+    let error_msg_ele = document.getElementById("error_msg");
+    error_msg_ele.innerText = "";
+    let id_reg = /[0-9]+/g;
+    if (!id_reg.test(can_id_ele.value.trim())) {
+        // alert("can id not number");
+        error_msg_ele.innerText = "can id not number";
+        return
+    }
+    let can_id = Number.parseInt(can_id_ele.value.trim());
+    let data_reg = /([0-9A-F]{2}\s){7}([0-9A-F]{2})/g;
+    let can_data = can_data_ele.value.trim().toUpperCase();
+    let can_data_bytes = can_data.split(" ");
+    if (!data_reg.test(can_data) || can_data_bytes.length !== 8) {
+        // alert("can data format error, format like: 12 34 56 78 90 AB CD EF");
+        error_msg_ele.innerText = "can data format error, format like: 12 34 56 78 90 AB CD EF";
+        return;
+    }
+    if (writer === undefined) {
+        error_msg_ele.innerText = "device not writable";
+        console.log(writer)
+        return;
+    }
+    const commandFrame = new Uint8Array([
+        0xF1, 0x05, 0x0A, can_id & 0xFF, (can_id >> 8) & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    ]);
+
+    for (let i = 0; i < 8; i++) {
+        commandFrame[i + 5] = parseInt(can_data_bytes[i], 16);
+    }
+    commandFrame[13] = checksumAdd(commandFrame.subarray(0, 13))
+    console.log(commandFrame);
+    writer.write(commandFrame);
 }
