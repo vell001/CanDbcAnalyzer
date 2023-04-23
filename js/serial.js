@@ -11,7 +11,8 @@ async function openSerial(baud) {
                 reader.releaseLock();
                 writer.releaseLock();
                 port.close();
-            } finally {
+            }catch (e) {
+                console.error(e);
             }
         }
         port = await navigator.serial.requestPort();
